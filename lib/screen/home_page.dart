@@ -20,7 +20,13 @@ class _HomePageState extends State<HomePage> {
         future: context.read<HomeController>().gstListOfSong(search: 'Hindi'),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return Center(child: Icon(Icons.error, color: Colors.white));
+            return Center(
+              child: Text(
+                snapshot.error.toString(),
+                style: TextStyle(color: Colors.white),
+              ),
+            );
+            // return Center(child: Icon(Icons.error, color: Colors.white));
           } else if (snapshot.hasData) {
             return SafeArea(
               child: SingleChildScrollView(
