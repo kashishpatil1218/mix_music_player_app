@@ -18,6 +18,9 @@
 // }
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../controller/home_controller.dart';
 
 
 
@@ -32,99 +35,109 @@ class DiscoverPage extends StatefulWidget {
 class _DiscoverPageState extends State<DiscoverPage> {
   int _selectedIndex = 0;
   int _selectedGenre = 0;
+
   final List<String> _genres = ['Pop', 'Rock', 'Jazz', 'Classical', 'Metal'];
 
   @override
   Widget build(BuildContext context) {
+    var providertrue=Provider.of<HomeController>(context,listen: true);
+    var providerFalse=Provider.of<HomeController>(context,listen: false);
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
         child: Stack(
           children: [
             // Main content
-            SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Discover Section
-                  _buildSectionHeader('Discover'),
-                  SizedBox(
-                    height: 180,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      children: [
-                        _buildDiscoverItem('Island Breeze', 'Marley Drift'),
-                        _buildDiscoverItem('Golden Horizon', 'Jah Vibes'),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Discover Section
+                _buildSectionHeader('Discover'),
+                const SizedBox(height: 16),
 
-                  // Genre Tabs
-                  SizedBox(
-                    height: 40,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: _genres.length,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.only(right: 16),
-                          child: GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _selectedGenre = index;
-                              });
-                            },
-                            child: Text(
-                              _genres[index],
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: _selectedGenre == index
-                                    ? Colors.white
-                                    : Colors.grey,
-                              ),
+                // Genre Tabs
+                SizedBox(
+                  height: 40,
+
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: _genres.length,
+                    itemBuilder: (context, index) {
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 16),
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedGenre = index;
+                            });
+                          },
+                          child: Text(
+                            _genres[index],
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: _selectedGenre == index
+                                  ? Colors.white
+                                  : Colors.grey,
                             ),
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                      );
+                    },
                   ),
-                  const SizedBox(height: 16),
+                ),
+                const SizedBox(height: 16),
 
-                  // Songs List
-                  Padding(
+
+                Expanded(
+                  child: FutureBuilder(
+                    future: providerFalse.gstListOfSong(search: "hindi"),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (snapshot.hasError) {
+                        return const Center(child: Text('Error fetching data!', style: TextStyle(color: Colors.white)));
+                      }
+                      if (!snapshot.hasData || snapshot.data?.data.result.isEmpty == true) {
+                        return const Center(child: Text('No data available', style: TextStyle(color: Colors.white)));
+                      }
+
+                      final songList = snapshot.data!.data.result;
+
+                      return Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: ListView.builder(
+                          itemCount: songList.length,
+                          itemBuilder: (context, index) {
+                            return _buildSongItem(songList[index].name, songList[index].label);
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+                // Songs List
+
+                // Popular Artists Section
+                _buildSectionHeader('Popular Artists'),
+                SizedBox(
+                  height: 100,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      children: [
-                        _buildSongItem('Electric Petals', 'GlowPix'),
-                        _buildSongItem('Golden Skylines', 'Amber Drift'),
-                        _buildSongItem('Paper Boats', 'Willow & The Waves'),
-                      ],
-                    ),
+                    children: [
+                      _buildArtistItem(),
+                      _buildArtistItem(),
+                      _buildArtistItem(),
+                      _buildArtistItem(),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-
-                  // Popular Artists Section
-                  _buildSectionHeader('Popular Artists'),
-                  SizedBox(
-                    height: 100,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      children: [
-                        _buildArtistItem(),
-                        _buildArtistItem(),
-                        _buildArtistItem(),
-                        _buildArtistItem(),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 100), // Space for player and bottom nav
-                ],
-              ),
+                ),
+                const SizedBox(height: 100), // Space for player and bottom nav
+              ],
             ),
 
             // Player Bar
