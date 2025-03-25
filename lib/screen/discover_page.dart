@@ -18,12 +18,12 @@
 // }
 
 import 'package:flutter/material.dart';
+import 'package:mix_music_player_app/screen/play_music/artist_music.dart';
+import 'package:mix_music_player_app/screen/play_music/music_player.dart';
+import 'package:mix_music_player_app/uitls/global.dart';
 import 'package:provider/provider.dart';
 
 import '../controller/home_controller.dart';
-
-
-
 
 class DiscoverPage extends StatefulWidget {
   const DiscoverPage({Key? key}) : super(key: key);
@@ -40,8 +40,8 @@ class _DiscoverPageState extends State<DiscoverPage> {
 
   @override
   Widget build(BuildContext context) {
-    var providertrue=Provider.of<HomeController>(context,listen: true);
-    var providerFalse=Provider.of<HomeController>(context,listen: false);
+    var providertrue = Provider.of<HomeController>(context, listen: true);
+    var providerFalse = Provider.of<HomeController>(context, listen: false);
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
@@ -77,9 +77,10 @@ class _DiscoverPageState extends State<DiscoverPage> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
-                              color: _selectedGenre == index
-                                  ? Colors.white
-                                  : Colors.grey,
+                              color:
+                                  _selectedGenre == index
+                                      ? Colors.white
+                                      : Colors.grey,
                             ),
                           ),
                         ),
@@ -89,19 +90,26 @@ class _DiscoverPageState extends State<DiscoverPage> {
                 ),
                 const SizedBox(height: 16),
 
-
                 Expanded(
                   child: FutureBuilder(
                     future: providerFalse.gstListOfSong(search: "hindi"),
                     builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
                       if (snapshot.hasError) {
-                        return const Center(child: Text('Error fetching data!', style: TextStyle(color: Colors.white)));
+                        return const Center(
+                          child: Text(
+                            'Error fetching data!',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        );
                       }
-                      if (!snapshot.hasData || snapshot.data?.data.result.isEmpty == true) {
-                        return const Center(child: Text('No data available', style: TextStyle(color: Colors.white)));
+                      if (!snapshot.hasData ||
+                          snapshot.data?.data.result.isEmpty == true) {
+                        return const Center(
+                          child: Text(
+                            'No data available',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        );
                       }
 
                       final songList = snapshot.data!.data.result;
@@ -109,9 +117,23 @@ class _DiscoverPageState extends State<DiscoverPage> {
                       return Padding(
                         padding: const EdgeInsets.all(12),
                         child: ListView.builder(
-                          itemCount: songList.length,
+                          itemCount: 7,
                           itemBuilder: (context, index) {
-                            return _buildSongItem(songList[index].name, songList[index].label);
+                            return GestureDetector(
+                              onTap: () {
+                                providerFalse.updateIndex(index);
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => MusicPlayerScreen(),
+                                  ),
+                                );
+                              },
+                              child: buildSongItem(
+                                songList[index].name,
+                                songList[index].label,
+                                songList[index].images[2].url,
+                              ),
+                            );
                           },
                         ),
                       );
@@ -123,16 +145,26 @@ class _DiscoverPageState extends State<DiscoverPage> {
 
                 // Popular Artists Section
                 _buildSectionHeader('Popular Artists'),
-                SizedBox(
-                  height: 100,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
                     children: [
-                      _buildArtistItem(),
-                      _buildArtistItem(),
-                      _buildArtistItem(),
-                      _buildArtistItem(),
+                      ...List.generate(artists.length, (index) {
+                        return GestureDetector(
+                          onTap: () async {
+                           var temp= await providerFalse.gstListOfSong(search: artists[index]['name']!);
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => ArtistMusic(selectedIndex: index,temp: temp!.data.result,),
+                              ),
+                            );
+                          },
+                          child: _buildArtistItem(
+                            artists[index]['image']!,
+                            artists[index]['name']!,
+                          ),
+                        );
+                      }),
                     ],
                   ),
                 ),
@@ -147,8 +179,6 @@ class _DiscoverPageState extends State<DiscoverPage> {
               right: 16,
               child: _buildPlayerBar(),
             ),
-
-
           ],
         ),
       ),
@@ -157,23 +187,21 @@ class _DiscoverPageState extends State<DiscoverPage> {
 
   Widget _buildSectionHeader(String title) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             title,
             style: const TextStyle(
-              fontSize: 25,
-              fontWeight: FontWeight.bold,color: Colors.white
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
             ),
           ),
           Text(
             'View All',
-            style: TextStyle(
-              fontSize: 15,
-              color: Colors.grey[400],
-            ),
+            style: TextStyle(fontSize: 15, color: Colors.grey[400]),
           ),
         ],
       ),
@@ -208,10 +236,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Colors.black.withOpacity(0.8),
-                  ],
+                  colors: [Colors.transparent, Colors.black.withOpacity(0.8)],
                 ),
               ),
               child: Column(
@@ -227,10 +252,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
                   ),
                   Text(
                     artist,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[500],
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                   ),
                 ],
               ),
@@ -241,63 +263,23 @@ class _DiscoverPageState extends State<DiscoverPage> {
     );
   }
 
-  Widget _buildSongItem(String title, String artist) {
+
+
+  Widget _buildArtistItem(String artist, String label) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Container(
-            height: 60,
-            width: 60,
-            decoration: BoxDecoration(
-              color: Colors.grey[800],
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(fontSize: 15,color: Colors.white),
-                ),
-                Text(
-                  artist,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[800],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Icon(
-            Icons.play_arrow,
-            color: Colors.red[600],
-            size: 24,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildArtistItem() {
-    return Container(
-      width: 90,
-      margin: const EdgeInsets.only(right: 16),
+      padding: EdgeInsets.only(left: 20),
       child: Column(
+        spacing: 10,
         children: [
-          Container(
-            height: 100,
-            width: 100,
-            decoration: const BoxDecoration(
-              color: Colors.grey,
-              shape: BoxShape.circle,
+          CircleAvatar(radius: 50, backgroundImage: AssetImage(artist)),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
             ),
           ),
-
         ],
       ),
     );
@@ -309,10 +291,7 @@ class _DiscoverPageState extends State<DiscoverPage> {
       decoration: BoxDecoration(
         color: Colors.grey[900],
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(
-          color: Colors.red,
-          width: 2,
-        ),
+        border: Border.all(color: Colors.red, width: 2),
       ),
       child: Row(
         children: [
@@ -333,36 +312,21 @@ class _DiscoverPageState extends State<DiscoverPage> {
               children: [
                 const Text(
                   'Neon Pulse',
-                  style: TextStyle(
-                    fontSize: 17,
-                    color: Colors.white,
-
-                  ),
+                  style: TextStyle(fontSize: 17, color: Colors.white),
                 ),
                 Text(
                   'Lil Mystic',
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 15, color: Colors.grey[600]),
                 ),
               ],
             ),
           ),
           IconButton(
-            icon: const Icon(
-              Icons.pause,
-              size: 30,
-              color: Colors.white,
-            ),
+            icon: const Icon(Icons.pause, size: 30, color: Colors.white),
             onPressed: () {},
           ),
           IconButton(
-            icon: const Icon(
-              Icons.skip_next,
-              size: 30,
-              color: Colors.white,
-            ),
+            icon: const Icon(Icons.skip_next, size: 30, color: Colors.white),
             onPressed: () {},
           ),
           const SizedBox(width: 8),
@@ -370,6 +334,39 @@ class _DiscoverPageState extends State<DiscoverPage> {
       ),
     );
   }
-
 }
 
+Widget buildSongItem(String title, String artist, String image) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Row(
+      children: [
+        Container(
+          height: 60,
+          width: 60,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            image: DecorationImage(image: NetworkImage(image)),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(fontSize: 15, color: Colors.white),
+              ),
+              Text(
+                artist,
+                style: TextStyle(fontSize: 12, color: Colors.grey[800]),
+              ),
+            ],
+          ),
+        ),
+        Icon(Icons.play_arrow, color: Colors.red[600], size: 24),
+      ],
+    ),
+  );
+}

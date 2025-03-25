@@ -95,7 +95,7 @@ class _HomePageState extends State<HomePage> {
               ),
             );
           }
-          return CircularProgressIndicator();
+          return Text("Not Found");
         },
       ),
     );
